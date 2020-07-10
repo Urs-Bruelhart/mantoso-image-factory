@@ -1,0 +1,50 @@
+---
+
+- hosts:
+    - all
+  become: true
+  gather_facts: true
+
+  vars:
+    ansible_debug: true
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_pass: builder
+    ansible_become_pass: builder
+
+  tasks:
+    - name: Bootstrap | Ensure automation user exists
+      user:
+        name: vagrant
+        comment: Automation User
+        state: present
+
+    - name: Bootstrap | Create vagrant user .ssh directory
+      file:
+        path: /home/vagrant/.ssh
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0700
+
+    - name: Bootstrap | Copy Vagrant insecure ssh key
+      get_url:
+        url: https://github.com/mitchellh/vagrant/raw/master/keys/vagrant.pub
+        dest: /home/vagrant/.ssh/authorized_keys
+        owner: vagrant
+        group: vagrant
+        mode: 0600
+
+    - name: Bootstrap | Ensure vagrant user in sudoers
+      lineinfile:
+        path: /etc/sudoers.d/vagrant
+        create: true
+        state: present
+        regexp: '^vagrant ALL'
+        line: 'vagrant ALL=(ALL) NOPASSWD: ALL'
+        mode: 0440
+
+  roles:
+    - bootstrap
+
+
+...

@@ -1,0 +1,6 @@
+---
+
+bootstrap__automation_user: "{{ lookup('env', 'image_factory__automation_user') }}"
+bootstrap__automation_user_pub_key: "{{ lookup('env', 'image_factory__automation_user_pub_key') }}"
+
+...

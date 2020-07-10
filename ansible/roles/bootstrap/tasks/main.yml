@@ -1,0 +1,148 @@
+---
+
+- name: Bootstrap | Setup alternatives for Python 3
+  alternatives:
+    name: python
+    link: /usr/bin/python
+    path: /usr/bin/python3
+
+- name: Bootstrap | Setup alternatives for Python 3 Pip
+  alternatives:
+    name: python-pip
+    link: /usr/bin/pip
+    path: /usr/bin/pip3
+
+- name: Bootstrap | Copy packer-sysprep directory to target
+  copy:
+    src: packer-virt-sysprep/
+    dest: /packer-virt-sysprep/
+    mode: preserve
+    owner: root
+    group: root
+
+- name: Bootstrap | Copy scripts to target
+  copy:
+    src: usr/local/bin/
+    dest: /usr/local/bin/
+    mode: preserve
+    owner: root
+    group: root
+
+- name: Bootstrap | Systemd - create remove-builder-user.service
+  copy:
+    src: etc/systemd/system/remove-builder-user.service
+    dest: /etc/systemd/system/remove-builder-user.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Bootstrap | Systemd - enable remove-builder-user.service
+  systemd:
+    name: remove-builder-user.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Bootstrap | Systemd - create packer-virt-sysprep.service
+  copy:
+    src: etc/systemd/system/packer-virt-sysprep.service
+    dest: /etc/systemd/system/packer-virt-sysprep.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Bootstrap | Systemd - Enable packer-virt-sysprep.service
+  systemd:
+    name: packer-virt-sysprep.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Bootstrap | Systemd - create zero-free-space.service
+  copy:
+    src: etc/systemd/system/zero-free-space.service
+    dest: /etc/systemd/system/zero-free-space.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Bootstrap | Systemd - Enable zero-free-space.service
+  systemd:
+    name: zero-free-space.service
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Bootstrap | Install Packages
+  package:
+    name: "{{ item }}"
+    state: installed
+  loop:
+    - acpid
+    - epel-release
+    - python3-libselinux
+    - python3-devel
+
+- name: Bootstrap | Import EPEL GPG key.
+  rpm_key:
+    key: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}
+    state: present
+
+- name: Bootstrap | Ensure acpid is enabled.
+  systemd:
+    name: acpid
+    enabled: true
+
+- name: Bootstrap | Configure sshd - disable dns lookups
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#* *UseDNS +'
+    line: 'UseDNS no'
+
+- name: Bootstrap | Configure sshd - disable root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#* *PermitRootLogin +'
+    line: 'PermitRootLogin no'
+
+- name: Bootstrap | Configure sshd - disable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#* *PasswordAuthentication +'
+    line: 'PasswordAuthentication no'
+
+- name: Bootstrap | Ensure automation user exists
+  user:
+    name: "{{ bootstrap__automation_user }}"
+    comment: Automation User
+    state: present
+
+- name: Bootstrap | Create automation user .ssh directory
+  file:
+    path: /home/{{ bootstrap__automation_user }}/.ssh
+    state: directory
+    owner: "{{ bootstrap__automation_user }}"
+    group: "{{ bootstrap__automation_user }}"
+    mode: 0700
+
+- name: Bootstrap | Copy automation user ssh key
+  copy:
+    dest: /home/{{ bootstrap__automation_user }}/.ssh/authorized_keys
+    content: "{{ bootstrap__automation_user_pub_key }}"
+    owner: "{{ bootstrap__automation_user }}"
+    group: "{{ bootstrap__automation_user }}"
+    mode: 0644
+
+- name: Bootstrap | Ensure automation user in sudoers
+  lineinfile:
+    path: /etc/sudoers.d/{{ bootstrap__automation_user }}
+    create: true
+    state: present
+    regexp: ^{{ bootstrap__automation_user }} ALL
+    line: "{{ bootstrap__automation_user }} ALL=(ALL) NOPASSWD: ALL"
+    mode: 0440
+
+...

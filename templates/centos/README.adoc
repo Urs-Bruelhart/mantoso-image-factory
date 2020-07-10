@@ -1,0 +1,7 @@
+= CentOS
+
+[source,bash]
+----
+cd templates/centos
+packer build -only=vagrant-cloud centos-8.1-x86_64.json
+----

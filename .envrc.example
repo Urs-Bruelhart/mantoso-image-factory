@@ -1,0 +1,35 @@
+
+image_factory__home=$(pwd)
+
+# Ansible
+export ANSIBLE_HOME=${image_factory__home}/ansible
+export ANSIBLE_CONFIG=${ANSIBLE_HOME}/ansible.cfg
+export image_factory__ansible_config="$ANSIBLE_HOME"/ansible.cfg
+export image_factory__ansible_playbook_dir="$ANSIBLE_HOME"
+
+# Vagrant
+export image_factory__vagrant_org=example
+
+# Packer Defaults
+export image_factory__disk_size=60
+export image_factory__vm_memory=1024
+
+# Packer provisioner username and password
+export image_factory__ssh_username=builder
+export image_factory__ssh_password=builder
+
+# ISO Images
+export image_factory__iso_8_1_filename_centos=CentOS-8.1.1911-x86_64-boot.iso
+export image_factory__iso_8_1_url_centos=http://mirror.cogentco.com/pub/linux/centos/8.1.1911/isos/x86_64
+export image_factory__iso_8_1_checksum=7fea13202bf2f26989df4175aace8fdc16e1137f7961c33512cbfad844008948
+export image_factory__iso_8_1_checksum_type=sha256
+
+# Proxmox Builder
+export image_factory__proxmox_host=192.168.1.98
+export image_factory__proxmox_port=8006
+export image_factory__proxmox_node=pve-001
+export image_factory__proxmox_password=2u43r23cr3T
+export image_factory__proxmox_usernmae=root@pam
+export image_factory__proxmox_storage_pool=local
+export image_factory__proxmox_storage_pool_type=directory
+export image_factory__proxmox_vmid=33000

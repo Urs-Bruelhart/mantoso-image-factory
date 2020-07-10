@@ -1,0 +1,24 @@
+[Unit]
+Description=Zero out all free space in filesystems
+Before=shutdown.target reboot.target halt.target
+# Before and After work in reverse at shutdown so here we are specifying
+# that zero-free-space must run AFTER the listed services
+Before=packer-virt-sysprep.service remove-builder-user.service
+Requires=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Increase the timeout limit as zeroing out large filesystems takes time
+TimeoutStopSec=10m
+ExecStart=/bin/true
+# Run the script to zero out all free space on filesystems
+ExecStop=/usr/local/bin/zero-free-space.sh
+# Remove the script after running
+ExecStop=/bin/rm -rf /usr/local/bin/zero-free-space.sh
+# Remove and disable this unit on first run
+ExecStop=/usr/bin/find /etc/systemd/system/ -name zero-free-space.service \
+    -exec /bin/rm -f '{}' \;
+
+[Install]
+WantedBy=multi-user.target

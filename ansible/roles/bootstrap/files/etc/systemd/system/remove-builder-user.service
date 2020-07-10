@@ -1,0 +1,20 @@
+[Unit]
+Description=Remove the Packer builder user and associated files
+Before=shutdown.target reboot.target halt.target
+Requires=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/sbin/userdel --force --remove builder
+# Delete the passwd, shadow, and group backup files as they will include
+# the packer builder user, password and group
+ExecStop=/bin/rm -f /etc/passwd- /etc/shadow- /etc/group-
+ExecStop=/bin/rm -f /etc/sudoers.d/builder
+# Remove and disable this unit on first run
+ExecStop=/usr/bin/find /etc/systemd/system/ -name remove-builder-user.service \
+    -exec /bin/rm -f '{}' \;
+
+[Install]
+WantedBy=multi-user.target

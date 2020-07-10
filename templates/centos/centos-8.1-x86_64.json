@@ -1,0 +1,230 @@
+{
+  "variables": {
+    "ansible_config": "{{ env `image_factory__ansible_config` }}",
+    "ansible_playbook_dir": "{{ env `image_factory__ansible_playbook_dir` }}",
+    "build_directory": "../../builds",
+    "description": "CentOS 8.1 - crafted by [Mantoso](https://mantoso.com) using [Image Factory](https://github.com/mantoso/mantoso-image-factory).",
+    "disk_size": "{{ env `image_factory__disk_size` }}",
+    "http_directory": "./http",
+    "iso_checksum": "{{ env `image_factory__iso_8_1_checksum` }}",
+    "iso_checksum_type": "{{ env `image_factory__iso_8_1_checksum_type` }}",
+    "iso_name": "{{ env `image_factory__iso_8_1_filename_centos` }}",
+    "iso_path": "../../iso/{{ user `os` }}",
+    "iso_url": "{{ env `image_factory__iso_8_1_url_centos` }}",
+    "os": "centos",
+    "os_version_full": "8.1.1911",
+    "os_version_major": "8",
+    "os_version_minor": "1",
+
+    "proxmox_host": "{{ env `image_factory__proxmox_host` }}",
+    "proxmox_iso_storage_pool": "{{ env `image_factory__proxmox_iso_storage_pool` }}",
+    "proxmox_node": "{{ env `image_factory__proxmox_node` }}",
+    "proxmox_password": "{{ env `image_factory__proxmox_password` }}",
+    "proxmox_port": "{{ env `image_factory__proxmox_port` }}",
+    "proxmox_storage_pool": "{{ env `image_factory__proxmox_storage_pool` }}",
+    "proxmox_storage_pool_type": "{{ env `image_factory__proxmox_storage_pool_type` }}",
+    "proxmox_url":"https://{{ env `image_factory__proxmox_host` }}:{{ env `image_factory__proxmox_port`}}/api2/json",
+    "proxmox_username": "{{ env `image_factory__proxmox_username` }}",
+    "proxmox_vmid": "{{ env `image_factory__proxmox_vmid` }}",
+
+    "ssh_password": "{{ env `image_factory__ssh_password` }}",
+    "ssh_username": "{{ env `image_factory__ssh_username` }}",
+
+    "vagrant_org": "{{ env `image_factory__vagrant_org` }}",
+    "virtualbox_iso_headless": "false",
+    "virtualbox__iso_guest_additions_url": "",
+    "vm_memory": "{{ env `image_factory__vm_memory` }}",
+    "vm_name": "{{ user `os` }}-{{ user `os_version_full` }}"
+  },
+
+  "sensitive-variables": ["proxmox_password", "ssh_password"],
+
+  "builders": [
+    {
+      "name": "proxmox",
+
+      "boot_command": [
+        "<tab> linux ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `os_version_major` }}/ks-{{ user `os_version_full` }}.cfg vga=791<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "cores": "2",
+      "disks": [
+        {
+          "disk_size": "{{ user `disk_size` }}G",
+          "format": "qcow2",
+          "storage_pool": "{{ user `proxmox_storage_pool` }}",
+          "storage_pool_type": "{{ user `proxmox_storage_pool_type` }}",
+          "type": "virtio"
+        }
+      ],
+      "http_directory": "{{ user `http_directory` }}",
+      "insecure_skip_tls_verify": true,
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "iso_url": "{{ user `iso_url` }}/{{ user `iso_name` }}",
+      "iso_storage_pool": "{{ user `proxmox_storage_pool` }}",
+      "memory": "{{ user `vm_memory` }}",
+      "network_adapters": [
+        {
+          "bridge": "vmbr0",
+          "model": "virtio"
+        }
+      ],
+      "node": "{{ user `proxmox_node` }}",
+      "os": "l26",
+      "password": "{{ user `proxmox_password` }}",
+      "proxmox_url": "{{ user `proxmox_url` }}",
+      "qemu_agent": true,
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_timeout": "30m",
+      "ssh_username": "{{ user `ssh_username` }}",
+      "template_description": "{{ user `description` }}",
+      "template_name": "{{ user `vm_name` }}",
+      "type": "proxmox",
+      "unmount_iso": true,
+      "username": "{{ user `proxmox_username` }}",
+      "vm_id": "{{ user `proxmox_vmid` }}",
+      "vm_name": "{{ user `vm_name` }}"
+    },
+
+    {
+      "name": "vagrant-cloud",
+      "boot_command": [
+        "<tab> linux ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `os_version_major` }}/ks-{{ user `os_version_full` }}.cfg vga=791<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "65536",
+      "guest_additions_url": "{{ user `virtualbox_iso_guest_additions_url` }}",
+      "guest_additions_path": "VBoxGuestAdditions_{{ .Version }}.iso",
+      "guest_os_type": "RedHat_64",
+      "hard_drive_discard": true,
+      "hard_drive_interface": "sata",
+      "hard_drive_nonrotational": true,
+      "headless": "{{ user `virtualbox_iso_headless` }}",
+      "http_directory": "{{ user `http_directory` }}",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "iso_urls": [
+        "{{ user `iso_path` }}/{{ user `iso_name` }}",
+        "{{ user `iso_url` }}/{{ user `iso_name` }}"
+      ],
+      "output_directory": "{{ user `build_directory` }}/{{ user `os` }}/{{ user `vm_name` }}",
+      "shutdown_command": "echo '{{ user `ssh_username` }}' | sudo -S /sbin/halt -h -p",
+      "ssh_agent_auth": false,
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_port": 22,
+      "ssh_username": "{{ user `ssh_username` }}",
+      "ssh_wait_timeout": "10000s",
+      "type": "virtualbox-iso",
+      "memory": "{{ user `vm_memory` }}",
+      "cpus": "2",
+      "guest_additions_mode": "disable",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{ user `vm_name` }}"
+
+    },
+
+    {
+      "name": "virtualbox-aws-ami",
+      "boot_command": [
+        "<tab> linux ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{ user `os_version_major` }}/ks-{{ user `os_version_full` }}.cfg vga=791<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "65536",
+      "guest_additions_url": "{{ user `virtualbox_iso_guest_additions_url` }}",
+      "guest_additions_path": "VBoxGuestAdditions_{{ .Version }}.iso",
+      "guest_os_type": "RedHat_64",
+      "hard_drive_discard": true,
+      "hard_drive_interface": "sata",
+      "hard_drive_nonrotational": true,
+      "headless": "{{ user `virtualbox_iso_headless` }}",
+      "http_directory": "{{ user `http_directory` }}",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "iso_urls": [
+        "{{ user `iso_path` }}/{{ user `iso_name` }}",
+        "{{ user `iso_url` }}/{{ user `iso_name` }}"
+      ],
+      "output_directory": "{{ user `build_directory` }}/{{ user `os` }}/{{ user `vm_name` }}",
+      "shutdown_command": "echo '{{ user `ssh_username` }}' | sudo -S /sbin/halt -h -p",
+      "ssh_password": "{{ user `ssh_password` }}",
+      "ssh_port": 22,
+      "ssh_username": "{{ user `ssh_username` }}",
+      "ssh_wait_timeout": "10000s",
+      "type": "virtualbox-iso",
+      "memory": "{{ user `vm_memory` }}",
+      "cpus": "2",
+      "guest_additions_mode": "disable",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{ user `vm_name` }}"
+    }
+  ],
+
+  "post-processors": [
+    [
+      {
+        "type": "vagrant",
+        "keep_input_artifact": true,
+        "output": "../../box/{{ .Provider }}/{{ user `os` }}/{{ user `vm_name` }}.box",
+        "vagrantfile_template": "{{ user `vagrantfile_template` }}",
+        "only": ["vagrant-cloud"]
+      },
+      {
+        "type": "vagrant-cloud",
+        "box_tag": "{{ user `vagrant_org` }}/{{ user `os` }}-{{ user `os_version_major` }}",
+        "access_token": "{{ user `vagrant_cloud_token` }}",
+        "version": "{{ user `os_version_full` }}",
+        "version_description": "{{ user `description` }}",
+        "only": ["vagrant-cloud"]
+      }
+    ],
+    {
+      "type": "shell-local",
+      "inline": [
+        "ssh root@{{ user `proxmox_host` }} qm set {{ user `proxmox_vmid` }} --scsihw virtio-scsi-pci --serial0 socket --vga serial0"
+      ],
+      "only": ["proxmox"]
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "{{ user `ansible_playbook_dir` }}/playbook-proxmox.yml",
+      "extra_arguments": [
+        "-v",
+        "-e",
+        "ansible_python_interpreter=/usr/bin/python3"
+      ],
+      "ansible_env_vars": [
+        "ANSIBLE_SSH_ARGS=-o AddKeysToAgent=no -o IdentitiesOnly=yes",
+        "ansible_become_password={{ user `ssh_password` }}",
+        "ansible_config={{ user `ansible_config` }}",
+        "ansible_force_color=True",
+        "ansible_password={{ user `ssh_password` }}"
+      ],
+      "user": "{{ user `ssh_username` }}",
+      "only": ["proxmox"]
+    },
+
+    {
+      "type": "ansible",
+      "playbook_file": "{{ user `ansible_playbook_dir` }}/playbook-vagrant-cloud.yml",
+      "extra_arguments": [
+        "-v",
+        "-e",
+        "ansible_python_interpreter=/usr/bin/python3"
+      ],
+      "ansible_env_vars": [
+        "ANSIBLE_SSH_ARGS=-o AddKeysToAgent=no -o IdentitiesOnly=yes",
+        "ansible_become_password={{ user `ssh_password` }}",
+        "ansible_config={{ user `ansible_config` }}",
+        "ansible_force_color=True",
+        "ansible_password={{ user `ssh_password` }}"
+      ],
+      "user": "{{ user `ssh_username` }}",
+      "only": ["vagrant-cloud"]
+    }
+  ]
+
+}
