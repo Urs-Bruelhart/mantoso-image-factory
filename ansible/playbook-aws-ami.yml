@@ -1,0 +1,16 @@
+---
+
+- hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    ansible_debug: true
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_pass: "{{ lookup('env','image_factory__ssh_username') }}"
+    ansible_become_pass: "{{ lookup('env','image_factory__ssh_password') }}"
+
+  roles:
+    - bootstrap
+
+...
