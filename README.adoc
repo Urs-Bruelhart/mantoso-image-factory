@@ -1,0 +1,56 @@
+= Image Factory
+:toc:
+:toc-placement: preamble
+// URI's
+:uri-m: https://mantoso.com
+:uri-vagrant-cloud: https://app.vagrantup.com
+:uri-new-vagrant-org: https://app.vagrantup.com/mantoso/boxes/centos-8
+:uri-new-vagrant-box: https://app.vagrantup.com/boxes/new
+
+Mantoso Image Factory is a project to build OS Images that are used with different providers. It is the foundation for all images used in development and with cloud providers.
+
+== At a Glance
+
+=== Operating Systems
+
+- CentOS 8
+
+=== Builders
+
+- proxmox
+- virtualbox-iso
+
+=== Provisioners
+
+- Ansible
+- Shell-local
+
+=== Post Processors
+
+- vagrant
+- vagrant-cloud
+
+== Requirements
+
+=== Vagrant Cloud
+
+To upload images to {uri-vagrant-cloud}[Vagrant Cloud], create a personal account. After that is completed,  {uri-new-vagrant-org}[create a new Organization].
+
+==== Create New Box
+
+. Login and navigate to the {uri-vagrant-cloud}[Dashboard] and click on {uri-new-vagrant-box}[New Vagrant Box].
+. Choose the org to put it under, a name and description. This will be the URL that your images will be hosted under. For example https://app.vagrantup.com/mantoso/boxes/centos-8 will host all CentOS 8 images, with versions being hosted under it.
+
+== TODO
+
+=== Extract /proc/cmdline variables (WIP)
+
+TO make variables available via kickstart and preseed, we need to extract variables with a prefix from `/proc/cmdline`.
+
+[source,bash]
+----
+%pre%
+cat /proc/cmdline | grep -o '\bIMAGE_BUILDER__[^ ]*' | sed -e 's/^/export /g > /tmp/image_builder.sh
+source /tmp/image_builder.sh
+%end%
+----
